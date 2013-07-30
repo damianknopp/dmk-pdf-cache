@@ -3,6 +3,7 @@ package dmk.pdf;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.File;
@@ -82,7 +83,7 @@ public class HtmlSimplePdfGenerationServiceTest {
 		assertTrue(byteCount > 0);
 		assertTrue(byteCount == run1Bytes.length);
 		final String md51 = DigestUtils.md5Hex(new FileInputStream(tmpFile1));
-		
+		final String md5Run1FromBytes = DigestUtils.md5Hex(run1Bytes);
 		Thread.sleep(100);
 		if(tmpFile1.exists()){
 			tmpFile1.delete();
@@ -100,9 +101,15 @@ public class HtmlSimplePdfGenerationServiceTest {
 		assertTrue(byteCount == run2Bytes.length);
 		
 		final String md52 = DigestUtils.md5Hex(new FileInputStream(tmpFile1));
-		logger.debug("first run md5= " + md51);
-		logger.debug("second run md5= " + md52);
+		final String md5Run2FromBytes = DigestUtils.md5Hex(run2Bytes);
+
+		logger.debug("first run md5 by file= " + md51);
+		logger.debug("first run md5 by bytes= " + md5Run1FromBytes);
+
+		logger.debug("second run md5 by file= " + md52);
+		logger.debug("second run md5 by bytes= " + md5Run2FromBytes);
+		assertThat(md5Run1FromBytes, equalTo(md5Run2FromBytes));
 		
-		assertThat(md51, equalTo(md52));
+		assertThat(md51, not(equalTo(md52)));
 	}
 }
