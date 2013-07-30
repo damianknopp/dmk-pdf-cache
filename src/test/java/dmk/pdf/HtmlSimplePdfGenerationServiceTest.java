@@ -1,10 +1,11 @@
 package dmk.pdf;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -28,12 +30,12 @@ public class HtmlSimplePdfGenerationServiceTest {
 	Logger logger = LoggerFactory.getLogger(HtmlSimplePdfGenerationServiceTest.class);
 
 	@Autowired
-	HtmlSimplePdfGenerationService pdfGenerationService = null;
+	@Qualifier("htmlSimplePdfGenerationService")
+	SimplePdfGenerationService htmlSimplePdfGenerationService;
 	String tmpFileName = null;
 	
 	@Before
 	public void setup() {
-//		pdfGenerationService = new HtmlSimplePdfGenerationService();
 		tmpFileName = "dmk-pdf1.pdf";
 		File tmpFile = new File(tmpFileName);
 		if(tmpFile.exists()){
@@ -43,17 +45,15 @@ public class HtmlSimplePdfGenerationServiceTest {
 	}
 
 	@After
-	public void after() {
-		pdfGenerationService = null;
-	}
+	public void after() { }
 
 	@Test
 	public void sanity() throws IOException {
-		assertNotNull(pdfGenerationService);
+		assertNotNull(htmlSimplePdfGenerationService);
 		
 //		final File tmpFile = File.createTempFile("dmk-pdf.", ".pdf");
 		File tmpFile = new File(tmpFileName);
-		pdfGenerationService.generateHelloWorld(tmpFile.getAbsolutePath());
+		htmlSimplePdfGenerationService.generateHelloWorld(tmpFile.getAbsolutePath());
 
 		final long byteCount = FileUtils.sizeOf(tmpFile);
 		if(logger.isDebugEnabled()){
@@ -69,10 +69,13 @@ public class HtmlSimplePdfGenerationServiceTest {
 	
 	@Test
 	public void testCache() throws Exception {
-		assertNotNull(pdfGenerationService);
+		assertNotNull(htmlSimplePdfGenerationService);
 		
 		File tmpFile1 = new File("dmk-pdf-cache1.pdf");
-		final byte[] run1Bytes = pdfGenerationService.generateHelloWorld(tmpFile1.getAbsolutePath());
+		if(tmpFile1.exists()){
+			tmpFile1.delete();
+		}
+		final byte[] run1Bytes = htmlSimplePdfGenerationService.generateHelloWorld(tmpFile1.getAbsolutePath());
 
 		long byteCount = FileUtils.sizeOf(tmpFile1);
 		if(logger.isDebugEnabled()){
@@ -89,27 +92,14 @@ public class HtmlSimplePdfGenerationServiceTest {
 			tmpFile1.delete();
 		}
 		
-//		File tmpFile2 = new File("dmk-pdf-cache1.pdf");
-		final byte[] run2Bytes = pdfGenerationService.generateHelloWorld(tmpFile1.getAbsolutePath());
-		byteCount = FileUtils.sizeOf(tmpFile1);
-		if(logger.isDebugEnabled()){
-			logger.debug("created file " + tmpFile1.getAbsolutePath());
-			final String size = FileUtils.byteCountToDisplaySize(byteCount);
-			logger.debug("size = " + size);
-		}
-		assertTrue(byteCount > 0);
+		final byte[] run2Bytes = htmlSimplePdfGenerationService.generateHelloWorld(tmpFile1.getAbsolutePath());
 		assertTrue(byteCount == run2Bytes.length);
-		
-		final String md52 = DigestUtils.md5Hex(new FileInputStream(tmpFile1));
 		final String md5Run2FromBytes = DigestUtils.md5Hex(run2Bytes);
-
 		logger.debug("first run md5 by file= " + md51);
 		logger.debug("first run md5 by bytes= " + md5Run1FromBytes);
-
-		logger.debug("second run md5 by file= " + md52);
 		logger.debug("second run md5 by bytes= " + md5Run2FromBytes);
 		assertThat(md5Run1FromBytes, equalTo(md5Run2FromBytes));
-		
-		assertThat(md51, not(equalTo(md52)));
+		//	if we deleted the tmpFile1 on the first run, and the second run was a cache hit, then no tmp file will be created.
+		assertFalse(tmpFile1.exists());
 	}
 }

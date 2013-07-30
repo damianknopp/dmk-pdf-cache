@@ -2,7 +2,6 @@ package dmk.pdf;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
@@ -31,7 +30,7 @@ import com.itextpdf.tool.xml.pipeline.end.PdfWriterPipeline;
 import com.itextpdf.tool.xml.pipeline.html.HtmlPipeline;
 import com.itextpdf.tool.xml.pipeline.html.HtmlPipelineContext;
 
-@Service
+@Service("htmlSimplePdfGenerationService")
 public class HtmlSimplePdfGenerationService implements SimplePdfGenerationService {
 	Logger logger = LoggerFactory.getLogger(HtmlSimplePdfGenerationService.class);
 
