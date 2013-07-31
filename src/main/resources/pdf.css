@@ -1,6 +1,7 @@
  @media print
         {
 body {
+	font-family: Arial, "helvetica", Nimbus Roman No9 L,"Times New Roman";
 	font-size: 16px;
 	color: #000;
 	background-color: #efefef;
